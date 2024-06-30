@@ -6,7 +6,7 @@
 import scrapy
 
 
-class BayutItem(scrapy.Item):
+class BayutScraperItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
