@@ -1,22 +1,34 @@
 import scrapy
 import re
 from parsel import Selector
+import requests
+
 
 class BayutSpider(scrapy.Spider):
     name = 'bayut'
     start_urls = ['https://www.bayut.com/to-rent/property/dubai/']
+    
 
     def parse(self, response):
+        response=requests.get()
         selector = Selector(response.text)
         
         property_urls = selector.xpath("//a[@aria-label='Listing']/@href").getall()
         for url in property_urls:
             yield scrapy.Request(url, callback=self.parse_property)
+            
+        page_number = 1
+        max_pages = 200
 
+        
     
-        next_page = selector.xpath("//a[@title='Next']/@href").get()
-        if next_page:
-            yield scrapy.Request(response.urljoin(next_page), callback=self.parse)
+
+        while page_number <= max_pages:
+            url = f'https://www.bayut.com/s/upgraded-properties-rent-dubai/page-{page_number}'
+            print(url)
+            yield scrapy.Request(url, callback=self.parse_next_page)
+            page_number += 1
+
 
     def parse_property(self, response):
         selector = Selector(response.text)
@@ -40,7 +52,7 @@ class BayutSpider(scrapy.Spider):
         permit_number = permit_numbers[0] if permit_numbers else None
         agent_name = selector.xpath('//span//a[@aria-label="Agent name"]/text()').get()
         image_url = selector.xpath("//img[@aria-label='Cover Photo']/@src").get()
-        breadcrumb = type_ +" " +"for rent in " + '>'.join(selector.xpath('//div[@aria-label="Breadcrumb"]//span[@class="_43ad44d9"]/text()').extract()).get()
+        breadcrumb = type_ +" " +"for rent in " + '>'.join(selector.xpath('//div[@aria-label="Breadcrumb"]//span[@class="_43ad44d9"]/text()').extract())
         amenities = selector.xpath('//div[@id="property-amenity-dialog"]//div[@class="_682538c2"]//span[@class="_7181e5ac"]/text()').getall()
         description = selector.xpath('//div[@aria-label="Property description"]//span[@class="_3547dac9"]//text()').getall()
 
